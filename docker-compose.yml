@@ -21,15 +21,16 @@ services:
     ports:
       - "8002:8002"
     environment:
-      tile_urls: "https://download.geofabrik.de/europe/germany-latest.osm.pbf"
+      tile_urls: ${VALHALLA_TILES_URL:-https://download.geofabrik.de/europe/germany/baden-wuerttemberg-latest.osm.pbf}
       server_threads: 2
       use_tiles_ignore_pbf: "False"
       serve_tiles: "True"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8002/status"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/status"]
       interval: 20s
       timeout: 10s
       retries: 10
+      start_period: 5m
 
   backend:
     build:

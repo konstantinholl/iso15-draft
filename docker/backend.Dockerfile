@@ -7,6 +7,7 @@ WORKDIR /workspace/backend
 
 RUN pip install --no-cache-dir uv
 COPY backend/pyproject.toml backend/README.md ./
+COPY backend/app ./app
 RUN uv pip install --system -e .[dev]
 
 COPY backend/ ./

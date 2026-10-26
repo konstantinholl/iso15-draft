@@ -51,3 +51,4 @@ Production-grade scaffold for a geospatial data science platform that evaluates 
 - Default study location is set to **Tübingen** (`48.5216`, `9.0576`).
 - `DATABASE_URL` targets PostGIS-enabled PostgreSQL.
 - `VALHALLA_URL` points to the local Valhalla container.
+- `VALHALLA_TILES_URL` defaults to the Baden-Württemberg OSM extract, which includes Tübingen and keeps local Valhalla initialization smaller than a Germany-wide extract.
