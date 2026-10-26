@@ -223,4 +223,43 @@ async def _route_geometry(
             return GeoJSONLineString(
                 coordinates=[tuple(point) for point in geometry["coordinates"]]
             )
+    trip = response.get("trip", {})
+    legs = trip.get("legs", []) if isinstance(trip, dict) else []
+    shapes = [leg.get("shape") for leg in legs if isinstance(leg, dict)]
+    if shapes and all(isinstance(shape, str) for shape in shapes):
+        coordinates = _decode_valhalla_shapes(shapes)
+        if len(coordinates) >= 2:
+            return GeoJSONLineString(coordinates=coordinates)
     raise InspectorError("Valhalla returned no GeoJSON route geometry")
+
+
+def _decode_valhalla_shapes(shapes: Sequence[str]) -> list[tuple[float, float]]:
+    """Decode Valhalla's encoded polyline6 shapes into GeoJSON lon/lat pairs."""
+
+    coordinates: list[tuple[float, float]] = []
+    latitude = 0
+    longitude = 0
+    for shape in shapes:
+        index = 0
+        while index < len(shape):
+            latitude_delta, index = _decode_polyline_value(shape, index)
+            longitude_delta, index = _decode_polyline_value(shape, index)
+            latitude += latitude_delta
+            longitude += longitude_delta
+            coordinates.append((longitude / 1_000_000, latitude / 1_000_000))
+    return coordinates
+
+
+def _decode_polyline_value(shape: str, index: int) -> tuple[int, int]:
+    result = 0
+    shift = 0
+    while True:
+        if index >= len(shape):
+            raise InspectorError("Valhalla returned an invalid encoded route geometry")
+        value = ord(shape[index]) - 63
+        index += 1
+        result |= (value & 0x1F) << shift
+        shift += 5
+        if value < 0x20:
+            break
+    return (-(result >> 1) - 1 if result & 1 else result >> 1), index
