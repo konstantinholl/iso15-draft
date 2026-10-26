@@ -74,8 +74,14 @@ export function App(): JSX.Element {
               <dl>
                 {Object.entries(inspection.categories).map(([category, result]) => (
                   <div className="metric" key={category}>
-                    <dt>{category.replace(/_/g, ' ')}</dt>
-                    <dd>{result.duration_minutes.toFixed(1)} min</dd>
+                    <dt>
+                      <strong>{result.name ?? 'Unnamed amenity'}</strong>
+                      <span>{category.replace(/_/g, ' ')}</span>
+                    </dt>
+                    <dd>
+                      {result.duration_minutes.toFixed(1)} min
+                      <small>{Math.round(result.distance_meters)} m away</small>
+                    </dd>
                   </div>
                 ))}
               </dl>

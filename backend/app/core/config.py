@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     valhalla_url: str = Field(default="http://valhalla:8002")
     valhalla_timeout_seconds: float = Field(default=10.0, ge=0.5, le=60.0)
 
+    overpass_url: str = Field(default="https://overpass-api.de/api/interpreter")
+    amenity_ingestion_radius_km: float = Field(default=10.0, gt=0.0, le=50.0)
+
     default_lat: float = Field(default=48.5216, ge=-90.0, le=90.0)
     default_lon: float = Field(default=9.0576, ge=-180.0, le=180.0)
 
