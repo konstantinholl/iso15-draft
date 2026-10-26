@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
-
 from app.main import create_app
+from fastapi.testclient import TestClient
 
 
 def test_health_endpoint_responds() -> None:

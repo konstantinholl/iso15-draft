@@ -52,11 +52,14 @@ class InspectorResponse(BaseModel):
 
 
 class CategoryInspection(BaseModel):
-    """Closest reachable amenity result for one essential category."""
+    """Closest reachable amenity result and its actual map location."""
 
     model_config = ConfigDict(extra="forbid")
 
     amenity_id: int
+    name: str | None
+    latitude: float
+    longitude: float
     duration_seconds: int
     duration_minutes: float
     distance_meters: float

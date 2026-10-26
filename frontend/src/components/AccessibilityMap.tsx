@@ -15,6 +15,9 @@ export type InspectorResponse = {
     string,
     {
       amenity_id: number
+      name: string | null
+      latitude: number
+      longitude: number
       duration_seconds: number
       duration_minutes: number
       distance_meters: number
@@ -39,6 +42,7 @@ export function AccessibilityMap({ travelMode, onInspect, inspection }: Accessib
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const marker = useRef<maplibregl.Marker | null>(null)
+  const amenityMarkers = useRef<maplibregl.Marker[]>([])
   const onInspectRef = useRef(onInspect)
   onInspectRef.current = onInspect
 
@@ -70,6 +74,8 @@ export function AccessibilityMap({ travelMode, onInspect, inspection }: Accessib
     map.current = mapInstance
 
     return () => {
+      amenityMarkers.current.forEach((amenityMarker) => amenityMarker.remove())
+      amenityMarkers.current = []
       mapInstance.remove()
       map.current = null
     }
@@ -82,6 +88,25 @@ export function AccessibilityMap({ travelMode, onInspect, inspection }: Accessib
     marker.current = new maplibregl.Marker({ color: '#d94f4f' })
       .setLngLat([inspection.longitude, inspection.latitude])
       .addTo(map.current)
+
+    amenityMarkers.current.forEach((amenityMarker) => amenityMarker.remove())
+    amenityMarkers.current = Object.entries(inspection.categories).map(([category, result]) => {
+      const element = document.createElement('div')
+      element.className = 'amenity-marker'
+      element.textContent = category.slice(0, 1).toUpperCase()
+      element.setAttribute('aria-label', result.name ?? `${category} amenity`)
+      element.title = result.name ?? `${category.replace(/_/g, ' ')} amenity`
+
+      return new maplibregl.Marker({ element })
+        .setLngLat([result.longitude, result.latitude])
+        .setPopup(
+          new maplibregl.Popup({ offset: 18 }).setHTML(
+            `<strong>${escapeHtml(result.name ?? 'Unnamed amenity')}</strong><br>` +
+            `${escapeHtml(category.replace(/_/g, ' '))} · ${result.duration_minutes.toFixed(1)} min`,
+          ),
+        )
+        .addTo(map.current as MapLibreMap)
+    })
 
     const routeSource = map.current.getSource('bottleneck-route') as maplibregl.GeoJSONSource | undefined
     if (inspection.bottleneck_route) {
@@ -107,4 +132,13 @@ export function AccessibilityMap({ travelMode, onInspect, inspection }: Accessib
   }, [inspection])
 
   return <div ref={mapContainer} className="map-container" aria-label={`Accessibility map, ${travelMode} mode`} />
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character] ??
+      character,
+  )
 }

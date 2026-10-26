@@ -107,6 +107,34 @@ dd {
 
 dd {
   font-weight: 600;
+  text-align: right;
+}
+
+.metric dt {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.metric dt span,
+.metric dd small {
+  color: #657786;
+  font-size: 0.78rem;
+  font-weight: 400;
+  text-transform: capitalize;
+}
+
+.amenity-marker {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  background: #2563eb;
+  box-shadow: 0 1px 5px #17212b66;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 @media (max-width: 800px) {

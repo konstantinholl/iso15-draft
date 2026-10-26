@@ -55,6 +55,7 @@ class MissingAmenitiesError(InspectorError):
 class Candidate:
     amenity_id: int
     category: str
+    name: str | None
     latitude: float
     longitude: float
 
@@ -108,6 +109,9 @@ async def inspect_point(
         duration = category_durations[best_index]
         results[category] = CategoryInspection(
             amenity_id=best.amenity_id,
+            name=best.name,
+            latitude=best.latitude,
+            longitude=best.longitude,
             duration_seconds=duration,
             duration_minutes=round(duration / 60, 1),
             distance_meters=category_distances[best_index],
@@ -140,7 +144,7 @@ async def _find_candidates(
 ) -> dict[str, list[Candidate]]:
     query = text(
         """
-        SELECT id, category, ST_Y(location) AS latitude, ST_X(location) AS longitude
+        SELECT id, category, name, ST_Y(location) AS latitude, ST_X(location) AS longitude
         FROM amenities
         WHERE regexp_replace(lower(category), '[ /-]+', '_', 'g')
             = ANY(CAST(:poi_types AS text[]))
@@ -172,7 +176,13 @@ async def _find_candidates(
         category = _category_for_type(row.category)
         if category and len(candidates[category]) < CANDIDATES_PER_CATEGORY:
             candidates[category].append(
-                Candidate(row.id, category, float(row.latitude), float(row.longitude))
+                Candidate(
+                    amenity_id=row.id,
+                    category=category,
+                    name=row.name,
+                    latitude=float(row.latitude),
+                    longitude=float(row.longitude),
+                )
             )
     return candidates
 
