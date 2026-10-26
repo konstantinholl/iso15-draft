@@ -20,6 +20,7 @@ CATEGORY_POI_TYPES: dict[str, tuple[str, ...]] = {
     "education": (
         "kindergarten",
         "school",
+        "university",
         "primary_school",
         "secondary_school",
         "primary_secondary_school",

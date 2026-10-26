@@ -44,7 +44,7 @@ Production-grade scaffold for a geospatial data science platform that evaluates 
 - `make run` — build and run all services locally
 - `make test` — run backend tests with pytest
 - `make lint` — run Ruff lint + format checks
-- `make ingest-osm` — placeholder task for future OSM ingestion pipeline wiring
+- `make ingest-osm` — fetch supported OSM amenities around the configured study location and upsert them into PostGIS
 
 ## Environment Highlights
 
@@ -52,3 +52,20 @@ Production-grade scaffold for a geospatial data science platform that evaluates 
 - `DATABASE_URL` targets PostGIS-enabled PostgreSQL.
 - `VALHALLA_URL` points to the local Valhalla container.
 - `VALHALLA_TILES_URL` defaults to the Baden-Württemberg OSM extract, which includes Tübingen and keeps local Valhalla initialization smaller than a Germany-wide extract.
+- `OVERPASS_URL` selects the Overpass API endpoint used by amenity ingestion.
+- `AMENITY_INGESTION_RADIUS_KM` controls the default loading radius around `DEFAULT_LAT`/`DEFAULT_LON` (10 km by default).
+
+## Loading amenities
+
+After the database is running and migrations have completed, load the default Tübingen study area:
+
+```bash
+make ingest-osm
+```
+
+The loader is idempotent: rerunning it updates existing OSM records by `osm_id` instead of creating duplicates. A custom area can be supplied with:
+
+```bash
+cd backend
+python -m app.pipeline.amenities --latitude 48.5216 --longitude 9.0576 --radius-km 10
+```

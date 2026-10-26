@@ -11,4 +11,4 @@ lint:
 	cd backend && python -m ruff format --check app ../tests/backend
 
 ingest-osm:
-	@echo "Ingestion entrypoint placeholder: wire OSM download and transform jobs in backend/app/pipeline"
+	cd backend && python -m app.pipeline.amenities
