@@ -43,6 +43,7 @@ class ValhallaClient:
         payload = {
             "locations": [self._format_location(origin), self._format_location(destination)],
             "costing": mode.value,
+            "format": "geojson",
             "directions_options": {"units": "kilometers"},
         }
         return await self._post_json("/route", payload)
