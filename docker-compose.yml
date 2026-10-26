@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-iso15}
+      POSTGRES_USER: ${POSTGRES_USER:-iso15}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iso15}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iso15} -d ${POSTGRES_DB:-iso15}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  valhalla:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    ports:
+      - "8002:8002"
+    environment:
+      tile_urls: "https://download.geofabrik.de/europe/germany-latest.osm.pbf"
+      server_threads: 2
+      use_tiles_ignore_pbf: "False"
+      serve_tiles: "True"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8002/status"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    command: uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env.example
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://iso15:iso15@db:5432/iso15}
+      VALHALLA_URL: ${VALHALLA_URL:-http://valhalla:8002}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+    volumes:
+      - ./backend:/workspace/backend
+    working_dir: /workspace/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      valhalla:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    volumes:
+      - ./frontend:/workspace/frontend
+      - /workspace/frontend/node_modules
+    working_dir: /workspace/frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
